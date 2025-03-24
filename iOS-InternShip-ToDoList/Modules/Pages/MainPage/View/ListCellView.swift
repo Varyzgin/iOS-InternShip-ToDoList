@@ -37,7 +37,7 @@ final class ListCellView: UITableViewCell {
     private lazy var descriptionLabel: UILabel = {
         let label = UILabel()
         label.font = DynamicFont.set(textStyle: .body)
-        label.numberOfLines = 0 // Теперь может быть любой высоты
+        label.numberOfLines = 2
         return label
     }()
 
@@ -49,14 +49,13 @@ final class ListCellView: UITableViewCell {
     }()
 
     override func prepareForReuse() {
-        //MARK: Добавил вызов родительского метода, иногда помогает
         super.prepareForReuse()
-        //MARK: Скидываем только то, что нужно, для оптимизации
-        checkoutButton.image = nil
-            checkoutButton.tintColor = nil
-            titleLabel.text = nil
-            descriptionLabel.text = nil
-            dateLabel.text = nil
+
+//        checkoutButton.image = nil
+//        checkoutButton.tintColor = nil
+//        titleLabel.text = nil
+//        descriptionLabel.text = nil
+//        dateLabel.text = nil
     }
 
     public func configure(with data: ToDo, isFirst: Bool = false, screenWidth: CGFloat) {
@@ -78,8 +77,6 @@ final class ListCellView: UITableViewCell {
         // title
         //MARK: Выносим настройку атрибутов, так работает быстрее
         self.updateTitle(data.title, isDone: data.isDone)
-        
-        //titleLabel.text = data.title
         titleLabel.textColor = data.isDone ? .secondaryText : .primaryText
         titleLabel.frame = CGRect(x: 0, y: 0, width: contentWidth, height: 21)
         contentLayout.addSubview(titleLabel)
@@ -116,7 +113,6 @@ final class ListCellView: UITableViewCell {
         }
     }
     
-    /// Вычисление высоты текста
     private func calculateTextHeight(for text: String, width: CGFloat) -> CGFloat {
         let maxSize = CGSize(width: width, height: .greatestFiniteMagnitude)
         let attributes: [NSAttributedString.Key: Any] = [.font: UIFont.preferredFont(forTextStyle: .body)]
@@ -124,7 +120,6 @@ final class ListCellView: UITableViewCell {
         return ceil(boundingBox.height)
     }
 
-    //MARK: Считаем высоту ячейки внутри себя
     static func calculateHeight(for data: ToDo, screenWidth: CGFloat) -> CGFloat {
         let contentWidth = screenWidth - 2 * Margins.M - Margins.XS - 32
         var height = Margins.S + 21 + Margins.XS // title + padding
