@@ -8,13 +8,14 @@
 import UIKit
 
 final class MainPageViewController: UIViewController {
-    lazy var data : [ToDo] = ToDo.testData()
-    let screenWidth : CGFloat = UIScreen.main.bounds.width
+    private lazy var data : [ToDo] = ToDo.testData()
+    private let screenWidth : CGFloat = UIScreen.main.bounds.width
     internal lazy var footerView : UIView = FooterView(frame: CGRect(x: 0, y: view.frame.maxY - 83, width: view.frame.width, height: 83), toDosCount: data.count - 1)
     
     //MARK: Кешируем высоты ячеек по indexPath
-    var heightCache = [IndexPath: CGFloat]()
-    lazy var listTableView : UITableView = {
+    private var heightCache = [IndexPath: CGFloat]()
+    
+    private lazy var listTableView : UITableView = {
         $0.dataSource = self
         $0.delegate = self
         $0.separatorStyle = .none
@@ -71,10 +72,8 @@ extension MainPageViewController : UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        ///Проверяем есть ли ячейка в кеше, если да
-        ///то достаем ее размер из кеша
-        ///если нет, то вызываем статичный метод
-        ///ячейки, которая считает свою высоту
+        ///Проверяем есть ли ячейка в кеше, если да, то достаем ее размер из кеша
+        ///если нет, то вызываем статичный метод ячейки, которая считает свою высоту
         if let cachedHeight = heightCache[indexPath] {
             return cachedHeight
         }
