@@ -10,120 +10,137 @@ import UIKit
 final class ListCellView: UITableViewCell {
     public static let id = "ListCellView"
     
-    private lazy var screenWidth : CGFloat = 0
-    private lazy var contentWidth : CGFloat = 0
-    private lazy var dynamicBlockHeight : CGFloat = 0
-    private lazy var checkoutButtonSize : CGSize = CGSize(width: 32, height: 32)
-    
-    private lazy var splitter: UIView = {
-        $0.backgroundColor = .systemGray6
-        return $0
-    }(UIView(frame: CGRect(
-        origin: CGPoint(x: Margins.M, y: 1),
-        size: CGSize(width: screenWidth - 2 * Margins.M, height: 2))
-    ))
-    
-    private lazy var checkoutButton: UIImageView = {
-        $0.isUserInteractionEnabled = true
-        return $0
-    }(UIImageView(frame: CGRect(
-        origin: CGPoint(x: Margins.M, y: Margins.S),
-        size: checkoutButtonSize)
-    ))
+    private var screenWidth: CGFloat = 0
+    private var contentWidth: CGFloat = 0
+    private let checkoutButtonSize: CGSize = CGSize(width: 32, height: 32)
 
-    private lazy var contentLayout : UIView = {
-        return $0
-    }(UIView(frame: CGRect(
-        origin: CGPoint(x: checkoutButton.frame.maxX + Margins.XS, y: Margins.S),
-        size: CGSize(width: contentWidth, height: contentView.bounds.height - 2 * Margins.S))
-    ))
+    private lazy var splitter: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemGray6
+        return view
+    }()
+
+    private lazy var checkoutButton: UIImageView = {
+        let imageView = UIImageView()
+        imageView.isUserInteractionEnabled = true
+        return imageView
+    }()
+
+    private lazy var contentLayout: UIView = UIView()
 
     private lazy var titleLabel: UILabel = {
-        $0.font = DynamicFont.set(textStyle: .headline)
-        return $0
-    }(UILabel(frame: CGRect(
-        origin: .zero,
-        size: CGSize(width: contentWidth, height: 21))
-    ))
-    
+        let label = UILabel()
+        label.font = DynamicFont.set(textStyle: .headline)
+        return label
+    }()
+
     private lazy var descriptionLabel: UILabel = {
-        $0.font = DynamicFont.set(textStyle: .body)
-        $0.numberOfLines = 2
-        return $0
-    }(UILabel(frame: CGRect(
-        origin: CGPoint(x: 0, y: titleLabel.frame.maxY + Margins.XS),
-        size: CGSize(width: contentWidth, height: contentLayout.frame.height - titleLabel.frame.height - Margins.XS - Margins.XS - dateLabel.frame.height))
-    ))
+        let label = UILabel()
+        label.font = DynamicFont.set(textStyle: .body)
+        label.numberOfLines = 0 // Теперь может быть любой высоты
+        return label
+    }()
 
     private lazy var dateLabel: UILabel = {
-        $0.font = DynamicFont.set(textStyle: .body)
-        $0.textColor = .secondaryText
-        return $0
-    }(UILabel(frame: CGRect(
-        origin: CGPoint(x: 0, y: contentLayout.bounds.maxY - 17),
-        size: CGSize(width: contentWidth, height: 17))
-    ))
-    
+        let label = UILabel()
+        label.font = DynamicFont.set(textStyle: .body)
+        label.textColor = .secondaryText
+        return label
+    }()
+
     override func prepareForReuse() {
+        //MARK: Добавил вызов родительского метода, иногда помогает
+        super.prepareForReuse()
+        //MARK: Скидываем только то, что нужно, для оптимизации
         checkoutButton.image = nil
-        checkoutButton.tintColor = nil
-//        contentLayout.frame = nil
-        titleLabel.text = nil
-        titleLabel.textColor = nil
-        titleLabel.attributedText = nil
-        descriptionLabel.text = nil
-        descriptionLabel.textColor = nil
-//        descriptionLabel.frame.size.height = 0
-        dateLabel.text = nil
+            checkoutButton.tintColor = nil
+            titleLabel.text = nil
+            descriptionLabel.text = nil
+            dateLabel.text = nil
     }
-    
+
     public func configure(with data: ToDo, isFirst: Bool = false, screenWidth: CGFloat) {
         self.screenWidth = screenWidth
-        self.contentWidth = screenWidth - 2 * Margins.M - Margins.XS - checkoutButton.frame.width
+        self.contentWidth = screenWidth - 2 * Margins.M - Margins.XS - checkoutButtonSize.width
         
         // splitter
         if !isFirst {
+            splitter.frame = CGRect(x: Margins.M, y: 1, width: screenWidth - 2 * Margins.M, height: 2)
             contentView.addSubview(splitter)
         }
-        
+
         // button
         checkoutButton.image = UIImage(systemName: data.isDone ? "checkmark.circle" : "circle")
         checkoutButton.tintColor = data.isDone ? .accent : .inactive
+        checkoutButton.frame = CGRect(x: Margins.M, y: Margins.S, width: checkoutButtonSize.width, height: checkoutButtonSize.height)
         contentView.addSubview(checkoutButton)
-        
-        // title
-        let text = data.title
-        if data.isDone {
-            let attributedString = NSMutableAttributedString(string: text)
 
-            attributedString.addAttribute(
-                .strikethroughStyle,
-                value: NSUnderlineStyle.single.rawValue,
-                range: NSRange(location: 0, length: text.count)
-            )
+        // title
+        //MARK: Выносим настройку атрибутов, так работает быстрее
+        self.updateTitle(data.title, isDone: data.isDone)
+        
+        //titleLabel.text = data.title
+        titleLabel.textColor = data.isDone ? .secondaryText : .primaryText
+        titleLabel.frame = CGRect(x: 0, y: 0, width: contentWidth, height: 21)
+        contentLayout.addSubview(titleLabel)
+
+        var yOffset = titleLabel.frame.maxY + Margins.XS
+
+        // description
+        if let text = data.description {
+            let textHeight = calculateTextHeight(for: text, width: contentWidth)
+            descriptionLabel.text = text
+            descriptionLabel.textColor = data.isDone ? .secondaryText : .primaryText
+            descriptionLabel.frame = CGRect(x: 0, y: yOffset, width: contentWidth, height: textHeight)
+            contentLayout.addSubview(descriptionLabel)
+            yOffset += textHeight + Margins.XS
+        }
+
+        // date
+        dateLabel.text = data.date
+        dateLabel.frame = CGRect(x: 0, y: yOffset, width: contentWidth, height: 17)
+        contentLayout.addSubview(dateLabel)
+
+        // contentLayout
+        contentLayout.frame = CGRect(x: checkoutButton.frame.maxX + Margins.XS, y: Margins.S, width: contentWidth, height: yOffset + 17)
+        contentView.addSubview(contentLayout)
+    }
+
+    private func updateTitle(_ text: String, isDone: Bool) {
+        if isDone {
+            let attributedString = NSMutableAttributedString(string: text)
+            attributedString.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: NSRange(location: 0, length: text.count))
             titleLabel.attributedText = attributedString
         } else {
             titleLabel.text = text
         }
-        titleLabel.textColor = data.isDone ? .secondaryText : .primaryText
-        contentLayout.addSubview(titleLabel)
-        
-        // description
-        if data.description != nil {
-            descriptionLabel.text = data.description
-            descriptionLabel.textColor = data.isDone ? .secondaryText : .primaryText
-            contentLayout.addSubview(descriptionLabel)
+    }
+    
+    /// Вычисление высоты текста
+    private func calculateTextHeight(for text: String, width: CGFloat) -> CGFloat {
+        let maxSize = CGSize(width: width, height: .greatestFiniteMagnitude)
+        let attributes: [NSAttributedString.Key: Any] = [.font: UIFont.preferredFont(forTextStyle: .body)]
+        let boundingBox = text.boundingRect(with: maxSize, options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: attributes, context: nil)
+        return ceil(boundingBox.height)
+    }
+
+    //MARK: Считаем высоту ячейки внутри себя
+    static func calculateHeight(for data: ToDo, screenWidth: CGFloat) -> CGFloat {
+        let contentWidth = screenWidth - 2 * Margins.M - Margins.XS - 32
+        var height = Margins.S + 21 + Margins.XS // title + padding
+
+        if let text = data.description {
+            let maxSize = CGSize(width: contentWidth, height: .greatestFiniteMagnitude)
+            let attributes: [NSAttributedString.Key: Any] = [.font: UIFont.preferredFont(forTextStyle: .body)]
+            let textHeight = text.boundingRect(with: maxSize, options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: attributes, context: nil).height
+            height += ceil(textHeight) + Margins.XS
         }
-        
-        // date
-        dateLabel.text = data.date
-        contentLayout.addSubview(dateLabel)
-        
-        // contentLayout
-//        contentLayout.frame.size.height += titleLabel.frame.height + Margins.XS + dateLabel.frame.height
-        contentView.addSubview(contentLayout)
+
+        height += 17 + Margins.S // date + padding
+        return height
     }
 }
+
 
 final class WholeCellView: UITableViewCell {
     public static let id = "WholeCellView"

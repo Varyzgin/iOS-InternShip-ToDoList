@@ -12,6 +12,8 @@ final class MainPageViewController: UIViewController {
     let screenWidth : CGFloat = UIScreen.main.bounds.width
     internal lazy var footerView : UIView = FooterView(frame: CGRect(x: 0, y: view.frame.maxY - 83, width: view.frame.width, height: 83), toDosCount: data.count - 1)
     
+    //MARK: Кешируем высоты ячеек по indexPath
+    var heightCache = [IndexPath: CGFloat]()
     lazy var listTableView : UITableView = {
         $0.dataSource = self
         $0.delegate = self
@@ -69,16 +71,18 @@ extension MainPageViewController : UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        var result = Margins.S + 21 + Margins.XS + 17 + Margins.S
-//        print(data[indexPath.row].description)
-        if let text = data[indexPath.row].description {
-            let delta = DynamicFont.calculateTextHeight(for: text, with: UIFont.preferredFont(forTextStyle: .body), maxWidth: UIScreen.main.bounds.width - 2 * Margins.M - Margins.XS - 32)
-//            print(delta)
-            result += delta
+        ///Проверяем есть ли ячейка в кеше, если да
+        ///то достаем ее размер из кеша
+        ///если нет, то вызываем статичный метод
+        ///ячейки, которая считает свою высоту
+        if let cachedHeight = heightCache[indexPath] {
+            return cachedHeight
         }
-        return result
-//        100
+        let calculatedHeight = ListCellView.calculateHeight(for: data[indexPath.row], screenWidth: tableView.frame.width)
+        heightCache[indexPath] = calculatedHeight
+        return calculatedHeight
     }
+
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if indexPath.item == data.count - 1 {
