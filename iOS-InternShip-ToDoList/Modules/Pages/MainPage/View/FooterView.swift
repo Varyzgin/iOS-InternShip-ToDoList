@@ -20,9 +20,17 @@ final class FooterView: UIView {
         return $0
     }(UILabel(frame: CGRect(x: self.bounds.midX - 40, y: self.bounds.minY + 18, width: 80, height: 13)))
     
+    public var completion: (() -> Void)?
+    
+    @objc func addButtonTapped() {
+        self.completion?()
+    }
+    
     private lazy var addButton: UIImageView = {
         $0.isUserInteractionEnabled = true
         $0.image = UIImage(systemName: "square.and.pencil")
+        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(addButtonTapped))
+        $0.addGestureRecognizer(gestureRecognizer)
         return $0
     }(UIImageView(frame: CGRect(x: self.bounds.maxX - 28 - 18, y: self.bounds.minY + 12, width: 30, height: 30)))
     
@@ -36,7 +44,6 @@ final class FooterView: UIView {
         } else {
             countLabel.text = "\(toDosCount) Задач"
         }
-        
         addSubview(footerView)
         addSubviews(countLabel, addButton)
     }
