@@ -10,7 +10,7 @@ import UIKit
 final class MainPageViewController: UIViewController {
     private lazy var data : [ToDo] = ToDo.testData()
     private let screenWidth : CGFloat = UIScreen.main.bounds.width
-    internal lazy var footerView : UIView = FooterView(frame: CGRect(x: 0, y: view.frame.maxY - 83, width: view.frame.width, height: 83), toDosCount: data.count - 1)
+    internal lazy var footerView : FooterView = FooterView(frame: CGRect(x: 0, y: view.frame.maxY - 83, width: view.frame.width, height: 83), toDosCount: data.count - 1)
     private lazy var listTableView : UITableView = {
         $0.dataSource = self
         $0.delegate = self
@@ -26,44 +26,23 @@ final class MainPageViewController: UIViewController {
         
         data.append(ToDo(isDone: false, title: "", date: "")) // for whole last cell
         
-//        navigationItem.title = "Задачи"
-//        navigationController?.navigationBar.prefersLargeTitles = true
-//        navigationItem.searchController = UISearchController()
+        navigationItem.title = "Задачи"
+        navigationController?.navigationBar.prefersLargeTitles = true
+        navigationItem.searchController = UISearchController()
         
         view.backgroundColor = .background
         view.addSubview(listTableView)
-        
-//        view.addSubview(footerView)
+        footerView.completion = { [weak self] in
+            let vc = DetailsPageViewController()
+            vc.configure(with: ToDo(isDone: false, title: "", date: ""))
+            self?.navigationController?.pushViewController(vc, animated: true)
+        }
+        view.addSubview(footerView)
     }
     private var heightCache = [IndexPath: CGFloat]()
 }
 
 extension MainPageViewController : UITableViewDelegate, UITableViewDataSource {
-//    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPaths: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
-//        return UIContextMenuConfiguration(actionProvider: { suggestedActions in
-//            if indexPaths.count == 0 {
-//                // Construct an empty-space menu.
-//                return UIMenu(children: [
-//                    UIAction(title: "New Folder") { _ in /* Implement the action. */
-//                    print("8kok")}
-//                ])
-//            }
-//            else if indexPaths.count == 1 {
-//                // Construct a single-item menu.
-//                return UIMenu(children: [
-//                    UIAction(title: "Copy") { _ in /* Implement the action. */print("5kok") },
-//                    UIAction(title: "Delete", attributes: .destructive) { _ in /* Implement the action. */ print("6kok")}
-//                ])
-//            }
-//            else {
-//                // Construct a multiple-item menu.
-//                return UIMenu(children: [
-//                    UIAction(title: "New Folder With Selection") { _ in /* Implement the action. */print("3kok") }
-//                ])
-//            }
-//        })
-//    }
-    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         1
     }
@@ -71,6 +50,9 @@ extension MainPageViewController : UITableViewDelegate, UITableViewDataSource {
         data.count
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        if indexPath.section == data.count - 1 {
+            return 45
+        }
         ///Проверяем есть ли ячейка в кеше, если да, то достаем ее размер из кеша
         ///если нет, то вызываем статичный метод ячейки, которая считает свою высоту
         if let cachedHeight = heightCache[indexPath] { return cachedHeight }
@@ -78,10 +60,14 @@ extension MainPageViewController : UITableViewDelegate, UITableViewDataSource {
         heightCache[indexPath] = calculatedHeight
         return calculatedHeight
     }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let vc = DetailsPageViewController()
+        vc.configure(with: data[indexPath.section])
+        self.navigationController?.pushViewController(vc, animated: true)
+    }
 
-    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if indexPath.item == data.count - 1 {
+        if indexPath.section == data.count - 1 {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: WholeCellView.id, for: indexPath) as? WholeCellView else { return UITableViewCell() }
             cell.configure(size: CGSize(width: UIScreen.main.bounds.width, height: 45))
             cell.selectionStyle = .none
@@ -92,6 +78,7 @@ extension MainPageViewController : UITableViewDelegate, UITableViewDataSource {
                                                             /// if first cell
         cell.configure(with: data[indexPath.section], isFirst: indexPath.section == 0, screenWidth: UIScreen.main.bounds.width)
         cell.selectionStyle = .none
+
         return cell
     }
 }

@@ -26,8 +26,17 @@ final class ListCellView: UITableViewCell {
         return imageView
     }()
 
-    private lazy var contentLayout: UIView = UIView()
+    private lazy var contentLayout: ContentMenuView = {
+        let view = ContentMenuView()
+        return view
+    }()
 
+    private lazy var striker: UIView = {
+        let view = UIView()
+        view.backgroundColor = .secondaryText
+        return view
+    }()
+    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = DynamicFont.set(textStyle: .headline)
@@ -51,11 +60,13 @@ final class ListCellView: UITableViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
 
-//        checkoutButton.image = nil
-//        checkoutButton.tintColor = nil
-//        titleLabel.text = nil
-//        descriptionLabel.text = nil
-//        dateLabel.text = nil
+        checkoutButton.image = nil
+        checkoutButton.tintColor = nil
+        titleLabel.text = nil
+        descriptionLabel.attributedText = nil
+        descriptionLabel.text = nil
+        descriptionLabel.attributedText = NSAttributedString(string: "", attributes: nil)
+        dateLabel.text = nil
     }
 
     public func configure(with data: ToDo, isFirst: Bool = false, screenWidth: CGFloat) {
@@ -66,6 +77,8 @@ final class ListCellView: UITableViewCell {
         if !isFirst {
             splitter.frame = CGRect(x: Margins.M, y: 1, width: screenWidth - 2 * Margins.M, height: 2)
             contentView.addSubview(splitter)
+        } else {
+            splitter.removeFromSuperview()
         }
 
         // button
@@ -75,17 +88,23 @@ final class ListCellView: UITableViewCell {
         contentView.addSubview(checkoutButton)
 
         // title
-        //MARK: Выносим настройку атрибутов, так работает быстрее
-        self.updateTitle(data.title, isDone: data.isDone)
+        titleLabel.text = data.title
         titleLabel.textColor = data.isDone ? .secondaryText : .primaryText
         titleLabel.frame = CGRect(x: 0, y: 0, width: contentWidth, height: 21)
+        if data.isDone {
+            striker.frame = CGRect(x: 0, y: titleLabel.frame.midY, width: ListCellView.calculateTextWidth(for: data.title, with: .preferredFont(forTextStyle: .headline), maxWidth: contentWidth), height: 2)
+            titleLabel.addSubview(striker)
+        } else {
+            striker.removeFromSuperview()
+        }
         contentLayout.addSubview(titleLabel)
 
         var yOffset = titleLabel.frame.maxY + Margins.XS
 
         // description
         if let text = data.description {
-            let textHeight = calculateTextHeight(for: text, width: contentWidth)
+            let textHeight = ListCellView.calculateTextHeight(for: text, with: UIFont.preferredFont(forTextStyle: .body), maxWidth: contentWidth, maxLines: 2)
+
             descriptionLabel.text = text
             descriptionLabel.textColor = data.isDone ? .secondaryText : .primaryText
             descriptionLabel.frame = CGRect(x: 0, y: yOffset, width: contentWidth, height: textHeight)
@@ -103,32 +122,44 @@ final class ListCellView: UITableViewCell {
         contentView.addSubview(contentLayout)
     }
 
-    private func updateTitle(_ text: String, isDone: Bool) {
-        if isDone {
-            let attributedString = NSMutableAttributedString(string: text)
-            attributedString.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: NSRange(location: 0, length: text.count))
-            titleLabel.attributedText = attributedString
-        } else {
-            titleLabel.text = text
-        }
-    }
-    
-    private func calculateTextHeight(for text: String, width: CGFloat) -> CGFloat {
-        let maxSize = CGSize(width: width, height: .greatestFiniteMagnitude)
-        let attributes: [NSAttributedString.Key: Any] = [.font: UIFont.preferredFont(forTextStyle: .body)]
-        let boundingBox = text.boundingRect(with: maxSize, options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: attributes, context: nil)
-        return ceil(boundingBox.height)
-    }
+    public static func calculateTextHeight(for text: String, with font: UIFont, maxWidth: CGFloat, maxLines: Int = 2) -> CGFloat {
+        let constraintSize = CGSize(width: maxWidth, height: .greatestFiniteMagnitude)
+        let boundingBox = text.boundingRect(
+            with: constraintSize,
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            attributes: [.font: font],
+            context: nil
+        )
+        let textHeight = ceil(boundingBox.height)
+        
+        let boundingBoxWhole = "t".boundingRect(
+            with: constraintSize,
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            attributes: [.font: font],
+            context: nil
+        )
+        let oneLineHeight = ceil(boundingBoxWhole.height)
+        let maxHeight: CGFloat = 2 * oneLineHeight
 
+        return min(textHeight, maxHeight)
+    }
+    public static func calculateTextWidth(for text: String, with font: UIFont, maxWidth: CGFloat) -> CGFloat {
+        let constraintSize = CGSize(width: maxWidth, height: .greatestFiniteMagnitude)
+        let boundingBox = text.boundingRect(
+            with: constraintSize,
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            attributes: [.font: font],
+            context: nil
+        )
+        return min(boundingBox.width, maxWidth)
+    }
     static func calculateHeight(for data: ToDo, screenWidth: CGFloat) -> CGFloat {
         let contentWidth = screenWidth - 2 * Margins.M - Margins.XS - 32
         var height = Margins.S + 21 + Margins.XS // title + padding
 
         if let text = data.description {
-            let maxSize = CGSize(width: contentWidth, height: .greatestFiniteMagnitude)
-            let attributes: [NSAttributedString.Key: Any] = [.font: UIFont.preferredFont(forTextStyle: .body)]
-            let textHeight = text.boundingRect(with: maxSize, options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: attributes, context: nil).height
-            height += ceil(textHeight) + Margins.XS
+            height += calculateTextHeight(for: text, with: UIFont.preferredFont(forTextStyle: .body), maxWidth: contentWidth, maxLines: 2)
+            height += Margins.XS
         }
 
         height += 17 + Margins.S // date + padding
