@@ -23,14 +23,26 @@ final class DetailsPageViewController: UIViewController, UITextViewDelegate {
     
     private lazy var titleTextView: UITextView = {
         let textView = UITextView()
+        textView.tag = 0
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.font = DynamicFont.set(textStyle: .largeTitle, trait: .traitBold)
+        textView.textColor = .primaryText
+
         textView.isScrollEnabled = false
         textView.sizeToFit()
         
         textView.delegate = self
         
         return textView
+    }()
+    
+    private lazy var titlePlaceHolderLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = DynamicFont.set(textStyle: .largeTitle, trait: .traitBold)
+        label.text = "Название"
+        label.textColor = .inactive
+        return label
     }()
     
     private lazy var dateLabel: UILabel = {
@@ -43,21 +55,34 @@ final class DetailsPageViewController: UIViewController, UITextViewDelegate {
     
     private lazy var descriptionTextView: UITextView = {
         let textView = UITextView()
+        textView.tag = 1
         textView.font = DynamicFont.set(textStyle: .body)
         textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.textColor = .primaryText
         
         textView.isScrollEnabled = false
         textView.sizeToFit()
         
+        textView.delegate = self
+
         return textView
+    }()
+    
+    private lazy var descriptionPlaceHolderLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = DynamicFont.set(textStyle: .body)
+        label.text = "Описание"
+        label.textColor = .inactive
+        return label
     }()
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         navigationController?.navigationBar.prefersLargeTitles = true
         
-        if let title = titleTextView.text {
-            if let toDo = toDo {
+        if let title = titleTextView.text, !title.isEmpty {            
+            if let toDo = toDo { // если toDo == nil - то это значит, что заметки не было
                 CoreManager.shared.updateToDo(id: toDo.id, title: title, descript: descriptionTextView.text, isDone: toDo.isDone)
             } else {
                 CoreManager.shared.createToDo(title: title, descript: descriptionTextView.text, date: Date.now, isDone: false)
@@ -69,34 +94,45 @@ final class DetailsPageViewController: UIViewController, UITextViewDelegate {
         navigationItem.largeTitleDisplayMode = .never
         
         if let toDo = toDo {
-//            toDoID = id
-//            print(toDo)
             self.toDo = toDo
             
             titleTextView.text = toDo.title
-            titleTextView.textColor = .primaryText
+            titlePlaceHolderLabel.isHidden = true
             if let date = toDo.date {
                 dateLabel.text = date.formattedDDMMYY()
             }
-            if let descript = toDo.descript {
+            if let descript = toDo.descript, !descript.isEmpty {
                 descriptionTextView.text = descript
+                descriptionPlaceHolderLabel.isHidden = true
             }
-            descriptionTextView.textColor = .primaryText
         } else {
-            titleTextView.text = "Заголовок"
-            titleTextView.textColor = .inactive
-            dateLabel.text = "Date()."
-            descriptionTextView.text = "Описание"
-            descriptionTextView.textColor = .inactive
-
+            dateLabel.text = Date.now.formattedDDMMYY()
         }
 
         contentView.addSubviews(titleTextView, dateLabel, descriptionTextView)
+        contentView.addSubviews(titlePlaceHolderLabel, descriptionPlaceHolderLabel)
         scrollView.addSubview(contentView)
         view.addSubview(scrollView)
         view.backgroundColor = .background
         setupConstraints()
     }
+    
+    func textViewDidChange(_ textView: UITextView) {
+        if textView.tag == 0 {
+            if textView.text == nil || textView.text.isEmpty {
+                titlePlaceHolderLabel.isHidden = false
+            } else {
+                titlePlaceHolderLabel.isHidden = true
+            }
+        } else if textView.tag == 1 {
+            if textView.text == nil || textView.text.isEmpty {
+                descriptionPlaceHolderLabel.isHidden = false
+            } else {
+                descriptionPlaceHolderLabel.isHidden = true
+            }
+        }
+    }
+    
     private func setupConstraints() {
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -114,6 +150,10 @@ final class DetailsPageViewController: UIViewController, UITextViewDelegate {
             titleTextView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             titleTextView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             
+            titlePlaceHolderLabel.centerYAnchor.constraint(equalTo: titleTextView.centerYAnchor),
+            titlePlaceHolderLabel.leadingAnchor.constraint(equalTo: titleTextView.leadingAnchor, constant: Margins.XS),
+            titlePlaceHolderLabel.trailingAnchor.constraint(equalTo: titleTextView.trailingAnchor, constant: -Margins.XS),
+            
             dateLabel.topAnchor.constraint(equalTo: titleTextView.bottomAnchor, constant: Margins.XS),
             dateLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Margins.XS),
             dateLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
@@ -122,20 +162,10 @@ final class DetailsPageViewController: UIViewController, UITextViewDelegate {
             descriptionTextView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             descriptionTextView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             descriptionTextView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            
+            descriptionPlaceHolderLabel.centerYAnchor.constraint(equalTo: descriptionTextView.centerYAnchor),
+            descriptionPlaceHolderLabel.leadingAnchor.constraint(equalTo: descriptionTextView.leadingAnchor, constant: Margins.XS),
+            descriptionPlaceHolderLabel.trailingAnchor.constraint(equalTo: descriptionTextView.trailingAnchor, constant: -Margins.XS),
         ])
-    }
-    
-    func textViewDidBeginEditing(_ textView: UITextView) {
-        if textView.textColor == .inactive {
-            textView.text = nil
-            textView.textColor = .primaryText
-        }
-    }
-    
-    func textViewDidEndEditing(_ textView: UITextView) {
-        if textView.text.isEmpty {
-            textView.text = "Placeholder"
-            textView.textColor = .inactive
-        }
     }
 }

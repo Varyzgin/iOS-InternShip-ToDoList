@@ -16,7 +16,7 @@ final class MainPagePresenter: MainPagePresenterProtocol {
     internal func updateToDos() {
         self.toDos = CoreManager.shared.readAllToDos()
         DispatchQueue.main.async {
-            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDos.count)
+            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDos.count - 1)
             self.view?.listTableView.reloadData()
         }
     }

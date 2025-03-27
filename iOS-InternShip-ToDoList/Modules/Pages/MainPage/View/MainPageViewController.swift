@@ -134,7 +134,6 @@ extension MainPageViewController : UITableViewDelegate, UITableViewDataSource {
                     self.presenter.updateToDos()
                 }
                 
-                // 3. Возвращаем меню с действиями
                 return UIMenu(title: "", children: [edit, delete])
             }
         )
