@@ -52,7 +52,7 @@ final class CoreManager {
         }
         return nil
     }
-    func updateToDo(id: String, title: String? = nil, descript: String? = nil, isDone: Bool) {
+    func updateToDo(id: String, title: String? = nil, descript: String? = nil, isDone: Bool = false) {
         let request = ToDo.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", id)
         do {
@@ -64,7 +64,7 @@ final class CoreManager {
                 toDo?.descript = descript
             }
             toDo?.date = Date.now
-            toDo?.isDone = false
+            toDo?.isDone = isDone
             
             saveContext()
         } catch {

@@ -21,21 +21,13 @@ final class ListCellView: UITableViewCell {
         view.backgroundColor = .systemGray6
         return view
     }()
+    
+    public var completion: (() -> Void)?
+    
     @objc private func checkoutButtonTapped() {
         if let data = self.data {
-            if data.isDone {
-                CoreManager.shared.updateToDo(id: data.id, isDone: !data.isDone)
-                data.isDone = false
-                checkoutButton.image = UIImage(systemName: "circle")
-                checkoutButton.tintColor = .inactive
-                contentLayout.configureIfDone()
-            } else {
-                CoreManager.shared.updateToDo(id: data.id, isDone: !data.isDone)
-                data.isDone = true
-                checkoutButton.image = UIImage(systemName: "checkmark.circle")
-                checkoutButton.tintColor = .accent
-                contentLayout.configureIfNotDone()
-            }
+            CoreManager.shared.updateToDo(id: data.id, isDone: !data.isDone)
+            self.completion?()
         }
     }
     private lazy var checkoutButton: UIImageView = {

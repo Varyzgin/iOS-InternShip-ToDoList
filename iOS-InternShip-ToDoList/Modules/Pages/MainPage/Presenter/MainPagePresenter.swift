@@ -8,7 +8,7 @@
 import Foundation
 
 protocol MainPagePresenterProtocol: AnyObject {
-//    var toDos: [ToDo] { get set }
+    var toDos: [ToDo] { get set }
     func updateToDos()
 }
 
@@ -16,7 +16,6 @@ final class MainPagePresenter: MainPagePresenterProtocol {
     internal func updateToDos() {
         self.toDos = CoreManager.shared.readAllToDos()
         DispatchQueue.main.async {
-            self.view?.data = self.toDos
             self.view?.footerView.countLabel.text = self.taskRus(number: self.toDos.count)
             self.view?.listTableView.reloadData()
         }
@@ -24,7 +23,7 @@ final class MainPagePresenter: MainPagePresenterProtocol {
     
     private weak var view: MainPageViewControllerProtocol?
     
-    private var toDos: [ToDo] = CoreManager.shared.readAllToDos()
+    internal var toDos: [ToDo] = CoreManager.shared.readAllToDos()
     
     private func taskRus(number toDosCount: Int ) -> String {
         if toDosCount % 10 == 1 && toDosCount % 100 != 11 {

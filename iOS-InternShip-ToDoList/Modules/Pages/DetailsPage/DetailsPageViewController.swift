@@ -51,6 +51,7 @@ final class DetailsPageViewController: UIViewController, UITextViewDelegate {
         
         return textView
     }()
+    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         navigationController?.navigationBar.prefersLargeTitles = true
@@ -63,12 +64,14 @@ final class DetailsPageViewController: UIViewController, UITextViewDelegate {
             }
         }
     }
+    
     internal func configure(toDo: ToDo?) {
         navigationItem.largeTitleDisplayMode = .never
         
         if let toDo = toDo {
 //            toDoID = id
 //            print(toDo)
+            self.toDo = toDo
             
             titleTextView.text = toDo.title
             titleTextView.textColor = .primaryText
