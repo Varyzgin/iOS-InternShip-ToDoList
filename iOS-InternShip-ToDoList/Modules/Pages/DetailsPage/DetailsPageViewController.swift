@@ -41,7 +41,7 @@ final class DetailsPageViewController: UIViewController, UITextViewDelegate {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = DynamicFont.set(textStyle: .largeTitle, trait: .traitBold)
         label.text = "Название"
-        label.textColor = .inactive
+        label.textColor = .secondaryText
         return label
     }()
     
@@ -73,7 +73,7 @@ final class DetailsPageViewController: UIViewController, UITextViewDelegate {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = DynamicFont.set(textStyle: .body)
         label.text = "Описание"
-        label.textColor = .inactive
+        label.textColor = .secondaryText
         return label
     }()
     
@@ -81,7 +81,7 @@ final class DetailsPageViewController: UIViewController, UITextViewDelegate {
         super.viewWillDisappear(animated)
         navigationController?.navigationBar.prefersLargeTitles = true
         
-        if let title = titleTextView.text, !title.isEmpty {            
+        if let title = titleTextView.text, !title.isEmpty {
             if let toDo = toDo { // если toDo == nil - то это значит, что заметки не было
                 CoreManager.shared.updateToDo(id: toDo.id, title: title, descript: descriptionTextView.text, isDone: toDo.isDone)
             } else {
@@ -113,6 +113,7 @@ final class DetailsPageViewController: UIViewController, UITextViewDelegate {
         contentView.addSubviews(titlePlaceHolderLabel, descriptionPlaceHolderLabel)
         scrollView.addSubview(contentView)
         view.addSubview(scrollView)
+        
         view.backgroundColor = .background
         setupConstraints()
     }

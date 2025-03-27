@@ -33,25 +33,31 @@ final class CoreManager {
     
     func readAllToDos() -> [ToDo] {
         let request = ToDo.fetchRequest()
-        request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
+        request.sortDescriptors = [
+            NSSortDescriptor(key: "isDone", ascending: true),
+            NSSortDescriptor(key: "date", ascending: false)
+        ]
         do {
-            return try persistentContainer.viewContext.fetch(request)
+            let toDos = try persistentContainer.viewContext.fetch(request)
+            return toDos
         } catch {
             print("Bad request")
+            return []
         }
-        return []
     }
     
     func readToDo(id: String) -> ToDo? {
         let request = ToDo.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", id)
         do {
-            return try persistentContainer.viewContext.fetch(request).first
+            let toDo = try persistentContainer.viewContext.fetch(request).first
+            return toDo
         } catch {
             print("Bad request")
+            return nil
         }
-        return nil
     }
+    
     func updateToDo(id: String, title: String? = nil, descript: String? = nil, isDone: Bool = false) {
         let request = ToDo.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", id)
@@ -71,10 +77,7 @@ final class CoreManager {
             print("Bad request")
         }
     }
-    func deleteAllToDos() {
-        let todos = readAllToDos()
-        todos.forEach { persistentContainer.viewContext.delete($0) }
-    }
+    
     func deleteToDo(id: String) {
         let request = ToDo.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", id)
