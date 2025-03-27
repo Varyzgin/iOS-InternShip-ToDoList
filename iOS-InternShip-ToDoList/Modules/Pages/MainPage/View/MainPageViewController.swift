@@ -53,13 +53,14 @@ final class MainPageViewController: UIViewController, MainPageViewControllerProt
         }
         view.addSubview(footerView)
     }
-    private var heightCache = [IndexPath: CGFloat]()
+    private var cellSizesCache : [IndexPath: CGSize] = [:]
 }
 
 extension MainPageViewController : UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         1
     }
+    
     func numberOfSections(in tableView: UITableView) -> Int {
         data.count
     }
@@ -71,73 +72,12 @@ extension MainPageViewController : UITableViewDelegate, UITableViewDataSource {
         ///Проверяем есть ли ячейка в кеше, если да, то достаем ее размер из кеша
         ///если нет, то вызываем статичный метод ячейки, которая считает свою высоту
 //        if let cachedHeight = heightCache[indexPath] { return cachedHeight }
-//        let calculatedHeight = ListCellView.calculateHeight(for: data[indexPath.section], screenWidth: tableView.frame.width)
-//        heightCache[indexPath] = calculatedHeight
-//        return calculatedHeight
-        return ListCellView.calculateHeight(for: data[indexPath.section], screenWidth: tableView.frame.width)
-    }
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let vc = DetailsPageViewController()
-        vc.configure(toDo: data[indexPath.section])
-        self.navigationController?.pushViewController(vc, animated: true)
+        let calculatedFrame = ContentLayout.calculateFrame(for: data[indexPath.section], screenWidth: tableView.frame.width)
+        cellSizesCache[indexPath] = calculatedFrame
+        return calculatedFrame.height
+//        return ListCellView.calculateHeight(for: data[indexPath.section], screenWidth: tableView.frame.width)
     }
     
-    func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-        let previewParameters = UIPreviewParameters()
-           
-           // 2. Устанавливаем отступы (10 пунктов со всех сторон)
-//           let expandedBounds = bounds.insetBy(dx: -10, dy: -10)
-//           previewParameters.visiblePath = UIBezierPath(roundedRect: expandedBounds, cornerRadius: 12)
-           
-           // 3. Настраиваем прозрачный фон
-           previewParameters.backgroundColor = .clear
-        
-        return UIContextMenuConfiguration(
-            identifier: nil,
-            previewProvider: nil, //{
-//                // 4. Ваш контроллер предпросмотра
-//                let previewController = CustomContentMenu(
-//                    data: toDo,
-//                    screenWidth: self.frame.width
-//                )
-//
-//                // 5. Добавляем отступы внутри preview
-//                previewController.additionalSafeAreaInsets = UIEdgeInsets(
-//                    top: 10,
-//                    left: 10,
-//                    bottom: 10,
-//                    right: 10
-//                )
-//
-//                return previewController
-//            },,
-            actionProvider: { _ in
-                // 2. Создаем действия для меню
-                let share = UIAction(
-                    title: "Поделиться",
-                    image: UIImage(systemName: "square.and.arrow.up")
-                ) { _ in
-                    print("Поделиться нажато")
-                }
-                
-                let delete = UIAction(
-                    title: "Удалить",
-                    image: UIImage(systemName: "trash"),
-                    attributes: .destructive
-                ) { _ in
-                    print("Удалить нажато")
-                    CoreManager.shared.deleteToDo(id: self.data[indexPath.section].id)
-                    self.data = CoreManager.shared.readAllToDos()
-                    tableView.reloadData()
-//                    tableView.deleteSections([indexPath.section], with: .automatic)
-                }
-                
-                // 3. Возвращаем меню с действиями
-                return UIMenu(title: "", children: [share, delete])
-            }
-        )
-    }
-
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if indexPath.section == data.count - 1 {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: WholeCellView.id, for: indexPath) as? WholeCellView else { return UITableViewCell() }
@@ -152,5 +92,52 @@ extension MainPageViewController : UITableViewDelegate, UITableViewDataSource {
         cell.selectionStyle = .none
 
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let vc = DetailsPageViewController()
+        vc.configure(toDo: data[indexPath.section])
+        self.navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        let previewParameters = UIPreviewParameters()
+           previewParameters.backgroundColor = .clear
+        
+        return UIContextMenuConfiguration(
+            identifier: nil,
+            previewProvider: {
+                guard let cell = tableView.cellForRow(at: indexPath) as? ListCellView else {
+                    return UIViewController()
+                }
+
+                let snapshot = cell.contentLayout.snapshotView(afterScreenUpdates: false) ?? cell.snapshotView(afterScreenUpdates: false)
+                if let snapshot = snapshot {
+                    return PreviewController(snapshot: snapshot)
+                }
+                return UIViewController()
+            },
+            actionProvider: { _ in
+                let edit = UIAction(
+                    title: "Редактировать",
+                    image: UIImage(systemName: "square.and.pencil")
+                ) { _ in
+                    let vc = DetailsPageViewController()
+                    vc.configure(toDo: self.data[indexPath.section])
+                    self.navigationController?.pushViewController(vc, animated: true)                }
+                
+                let delete = UIAction(
+                    title: "Удалить",
+                    image: UIImage(systemName: "trash"),
+                    attributes: .destructive
+                ) { _ in
+                    CoreManager.shared.deleteToDo(id: self.data[indexPath.section].id)
+                    self.presenter.updateToDos()
+                }
+                
+                // 3. Возвращаем меню с действиями
+                return UIMenu(title: "", children: [edit, delete])
+            }
+        )
     }
 }

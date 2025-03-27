@@ -8,75 +8,81 @@
 import UIKit
 
 final class ContentLayout: UIView {
-    public lazy var striker: UIView = {
+//    private lazy var data: ToDo? = nil
+    private lazy var striker: UIView = {
         let view = UIView()
         view.backgroundColor = .secondaryText
         return view
     }()
     
-    public lazy var titleLabel: UILabel = {
+    private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = DynamicFont.set(textStyle: .headline)
         return label
     }()
     
-    public lazy var descriptionLabel: UILabel = {
+    private lazy var descriptionLabel: UILabel = {
         let label = UILabel()
         label.font = DynamicFont.set(textStyle: .body)
         label.numberOfLines = 2
         return label
     }()
     
-    public lazy var dateLabel: UILabel = {
+    private lazy var dateLabel: UILabel = {
         let label = UILabel()
         label.font = DynamicFont.set(textStyle: .body)
         label.textColor = .secondaryText
         return label
     }()
     
-    public func configureIsDone() {
+    public func configureIfDone() {
         titleLabel.textColor = .secondaryText
-        striker.frame = CGRect(x: 0, y: titleLabel.frame.midY, width: ListCellView.calculateTextWidth(for: titleLabel.text!, with: .preferredFont(forTextStyle: .headline), maxWidth: self.frame.width), height: 2)
+        striker.frame = CGRect(x: 0, y: titleLabel.bounds.midY, width: CGSize.minSizeForTextInView(for: titleLabel.text!, with: .preferredFont(forTextStyle: .headline), maxWidth: self.bounds.width).width, height: 2)
         titleLabel.addSubview(striker)
-        if let text = descriptionLabel.text {
-            descriptionLabel.textColor = .secondaryText
-        }
+        descriptionLabel.textColor = .secondaryText
     }
     
-    public func configureIsNotDone() {
+    public func configureIfNotDone() {
         titleLabel.textColor = .primaryText
-        if let text = descriptionLabel.text {
-            descriptionLabel.textColor = .primaryText
-        }
+        striker.removeFromSuperview()
+        descriptionLabel.textColor = .primaryText
     }
     
-    init(frame: CGRect, data: ToDo) {
-        super.init(frame: frame)
-        
-        // title
+    public func configure(with data: ToDo) {
+        // text
         titleLabel.text = data.title
-        titleLabel.frame = CGRect(x: 0, y: 0, width: frame.width, height: 21)
-        self.addSubview(titleLabel)
-
-        var yOffset = titleLabel.frame.maxY + Margins.XS
-
-        // description
-        if let text = data.descript {
-            let textHeight = ListCellView.calculateTextHeight(for: text, with: UIFont.preferredFont(forTextStyle: .body), maxWidth: frame.width, maxLines: 2)
-
-            descriptionLabel.text = text
-            descriptionLabel.frame = CGRect(x: 0, y: yOffset, width: frame.width, height: textHeight)
-            self.addSubview(descriptionLabel)
-            yOffset += textHeight + Margins.XS
-        }
-
-        // date
+        if let text = data.descript { descriptionLabel.text = text }
         dateLabel.text = data.date?.formattedDDMMYY()
-        dateLabel.frame = CGRect(x: 0, y: yOffset, width: frame.width, height: 17)
-        self.addSubview(dateLabel)
+
+        // frames
+        titleLabel.frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: 21)
+        dateLabel.frame = CGRect(x: 0, y: self.bounds.maxY - 17, width: self.bounds.width, height: 17)
+        if let descript = data.descript, !descript.isEmpty { descriptionLabel.frame = CGRect(x: 0, y: titleLabel.frame.maxY + Margins.XS, width: self.bounds.width, height: dateLabel.frame.minY - titleLabel.frame.maxY - 2 * Margins.XS) }
+        
+        // colors
+        if data.isDone { configureIfDone() } else { configureIfNotDone() }
+        
+        // adding
+        self.addSubviews(titleLabel, dateLabel)
+        if let descript = data.descript, !descript.isEmpty { self.addSubview(descriptionLabel) }
     }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    public func resetContent() {
+        titleLabel.text = nil
+        descriptionLabel.text = nil
+        dateLabel.text = nil
+    }
+    
+    public static func calculateFrame(for data: ToDo, screenWidth: CGFloat) -> CGSize {
+        let contentWidth = screenWidth - 2 * Margins.M - Margins.XS - 32
+        var height = Margins.S + 21 + Margins.XS // title + padding
+
+        if let text = data.descript, !text.isEmpty {
+            height += CGSize.minSizeForTextInView(for: text, with: UIFont.preferredFont(forTextStyle: .body), maxWidth: contentWidth, maxLines: 2).height
+            height += Margins.XS
+        }
+
+        height += 17 + Margins.S // date + padding
+        return CGSize(width: contentWidth, height: height)
     }
 }
