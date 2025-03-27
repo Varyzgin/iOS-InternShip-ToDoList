@@ -45,10 +45,8 @@ struct JSONReceiver : Decodable {
     }
     
     func recordToCoreData() {
-        let nowDateString = Date.formattedDDMMYY(Date.now)
-
         for note in todos {
-            CoreManager.shared.createToDo(title: note.todo, descript: nil, date: nil, isDone: note.completed)
+            CoreManager.shared.createToDo(title: note.todo, descript: nil, date: Date.now, isDone: note.completed)
         }
     }
 }

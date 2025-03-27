@@ -6,3 +6,12 @@
 //
 
 import UIKit
+
+final class Builder {
+    public static func makeMainPage() -> UIViewController {
+        let vc = MainPageViewController()
+        let presenter = MainPagePresenter(view: vc)
+        vc.presenter = presenter
+        return vc
+    }
+}

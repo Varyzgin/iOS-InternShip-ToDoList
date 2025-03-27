@@ -8,11 +8,35 @@
 import Foundation
 
 protocol MainPagePresenterProtocol: AnyObject {
-    
+    var toDos: [ToDo] { get set }
 }
 
 final class MainPagePresenter: MainPagePresenterProtocol {
-    private lazy var networkService: NetworkServiceProtocol = {
-        
+    private weak var view: MainPageViewControllerProtocol?
+    
+    internal var toDos: [ToDo] = CoreManager.shared.readAllToDos()//[]
+//    {
+//        willSet {
+//            DispatchQueue.main.async {
+//                self.view?.data = self.toDos
+//                self.view?.footerView.countLabel.text = self.taskRus(number: self.toDos.count)
+//                self.view?.listTableView.reloadData()
+//            }
+//        }
+//    }
+    
+    private func taskRus(number toDosCount: Int ) -> String {
+        if toDosCount % 10 == 1 && toDosCount % 100 != 11 {
+            return "\(toDosCount) Задачa"
+        } else if (toDosCount % 10 == 2 || toDosCount % 10 == 3 || toDosCount % 10 == 4)
+                    && toDosCount % 100 != 12 && toDosCount % 100 != 13 && toDosCount % 100 != 14 {
+            return "\(toDosCount) Задачи"
+        } else {
+            return "\(toDosCount) Задач"
+        }
+    }
+    
+    init(view: MainPageViewControllerProtocol?) {
+        self.view = view
     }
 }

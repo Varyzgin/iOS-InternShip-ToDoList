@@ -8,6 +8,7 @@
 import UIKit
 
 final class DetailsPageViewController: UIViewController, UITextViewDelegate {
+    private lazy var toDo: ToDo? = nil
     private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -50,14 +51,33 @@ final class DetailsPageViewController: UIViewController, UITextViewDelegate {
         
         return textView
     }()
-
-    internal func configure(with toDo: ToDo?) {
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.navigationBar.prefersLargeTitles = true
+        
+        if let title = titleTextView.text {
+            if let toDo = toDo {
+                CoreManager.shared.updateToDo(id: toDo.id, title: title, descript: descriptionTextView.text, isDone: toDo.isDone)
+            } else {
+                CoreManager.shared.createToDo(title: title, descript: descriptionTextView.text, date: Date.now, isDone: false)
+            }
+        }
+    }
+    internal func configure(toDo: ToDo?) {
         navigationItem.largeTitleDisplayMode = .never
+        
         if let toDo = toDo {
+//            toDoID = id
+//            print(toDo)
+            
             titleTextView.text = toDo.title
             titleTextView.textColor = .primaryText
-            dateLabel.text = toDo.date
-            descriptionTextView.text = toDo.description
+            if let date = toDo.date {
+                dateLabel.text = date.formattedDDMMYY()
+            }
+            if let descript = toDo.descript {
+                descriptionTextView.text = descript
+            }
             descriptionTextView.textColor = .primaryText
         } else {
             titleTextView.text = "Заголовок"

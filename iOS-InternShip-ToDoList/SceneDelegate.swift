@@ -17,15 +17,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let scene = (scene as? UIWindowScene) else { return }
-        self.window = UIWindow(windowScene: scene)
-//        let navigationController = UINavigationController(rootViewController: MainPageViewController())
-//        navigationController.navigationBar.prefersLargeTitles = true
         
-//        let vc = DetailsPageViewController()
-//        vc.configure(with: ToDo.testData()[0])
-        let vc = MainPageViewController()
+//        CoreManager.shared.deleteAllToDos()
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+        if  CoreManager.shared.readAllToDos().isEmpty {
+            let networkService: NetworkService = NetworkService(urlString: "https://dummyjson.com")
+                    networkService.sendRequest(path: "/todos", completion: { response in
+                        response.recordToCoreData()
+                    })
+        }
+        
+        let vc = Builder.makeMainPage()
 
-        
+        self.window = UIWindow(windowScene: scene)
         self.window?.rootViewController = UINavigationController(rootViewController: vc)
         self.window?.makeKeyAndVisible()
     }
@@ -58,7 +62,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // to restore the scene back to its current state.
 
         // Save changes in the application's managed object context when the application transitions to the background.
-        (UIApplication.shared.delegate as? AppDelegate)?.saveContext()
+        CoreManager.shared.saveContext()
     }
 
 
