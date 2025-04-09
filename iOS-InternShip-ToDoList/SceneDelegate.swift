@@ -18,15 +18,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let scene = (scene as? UIWindowScene) else { return }
         
-        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-//        print(CoreManager.shared.readAllToDos())
-        if CoreManager.shared.readAllToDos().isEmpty {
-            let networkService: NetworkService = NetworkService(urlString: "https://dummyjson.com")
-                    networkService.sendRequest(path: "/todos", completion: { response in
-                        response.recordToCoreData()
-                    })
-        }
-        
         let vc = Builder.makeMainPage()
 
         self.window = UIWindow(windowScene: scene)

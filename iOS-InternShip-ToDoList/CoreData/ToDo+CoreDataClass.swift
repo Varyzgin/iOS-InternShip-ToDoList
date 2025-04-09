@@ -83,6 +83,7 @@ final class CoreManager {
         request.predicate = NSPredicate(format: "id == %@", id)
         if let toDo = readToDo(id: id) {
             persistentContainer.viewContext.delete(toDo)
+            saveContext()
         }
     }
     
@@ -117,7 +118,7 @@ final class CoreManager {
 
     // MARK: - Core Data Saving support
 
-    func saveContext () {
+    func saveContext() {
         let context = persistentContainer.viewContext
         if context.hasChanges {
             do {

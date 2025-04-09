@@ -22,6 +22,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
         // Called when a new scene session is being created.
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+//        print(CoreManager.shared.readAllToDos())
+        if CoreManager.shared.readAllToDos().isEmpty {
+            let networkService: NetworkService = NetworkService(urlString: "https://dummyjson.com")
+            DispatchQueue.main.async {
+                networkService.sendRequest(path: "/todos", completion: { response in
+                    response.recordToCoreData()
+                    NotificationCenter.default.post(name: Notification.Name.reloadData, object: nil)
+                })
+            }
+        }
         // Use this method to select a configuration to create the new scene with.
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }

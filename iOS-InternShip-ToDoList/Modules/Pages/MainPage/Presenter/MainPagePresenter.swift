@@ -9,22 +9,14 @@ import Foundation
 
 protocol MainPagePresenterProtocol: AnyObject {
     var toDos: [ToDo] { get set }
-    func updateToDos()
+    func deleteItem(id: String)
+    func checkoutTapped(id: String, isDone: Bool)
 }
 
 final class MainPagePresenter: MainPagePresenterProtocol {
-    internal func updateToDos() {
-        self.toDos = CoreManager.shared.readAllToDos()
-        self.toDos.append(ToDo()) // для пустой ячейки снизу
-        DispatchQueue.main.async {
-            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDos.count - 1) // минус пустая ячейка
-            self.view?.listTableView.reloadData()
-        }
-    }
-    
     private weak var view: MainPageViewControllerProtocol?
     
-    internal var toDos: [ToDo] = CoreManager.shared.readAllToDos()
+    internal var toDos: [ToDo] = []
     
     private func taskRus(number toDosCount: Int ) -> String {
         if toDosCount % 10 == 1 && toDosCount % 100 != 11 {
@@ -37,8 +29,31 @@ final class MainPagePresenter: MainPagePresenterProtocol {
         }
     }
     
-    init(view: MainPageViewControllerProtocol?) {
+    @objc func reloadTableData() {
+        self.toDos = CoreManager.shared.readAllToDos()
+        self.toDos.append(ToDo()) // для пустой ячейки снизу
+        DispatchQueue.main.async {
+            self.view?.reloadListTableView()
+            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDos.count - 1) // минус пустая ячейка
+        }
+    }
+    
+    public func deleteItem(id: String) {
+        CoreManager.shared.deleteToDo(id: id)
+        self.toDos = CoreManager.shared.readAllToDos()
+        self.toDos.append(ToDo()) // для пустой ячейки снизу
+        DispatchQueue.main.async {
+            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDos.count - 1) // минус пустая ячейка
+        }
+    }
+    
+    public func checkoutTapped(id: String, isDone: Bool) {
+        CoreManager.shared.updateToDo(id: id, isDone: !isDone)
+        self.reloadTableData()
+    }
+
+    public init(view: MainPageViewControllerProtocol?) {
         self.view = view
-        updateToDos()
+        NotificationCenter.default.addObserver(self, selector: #selector(reloadTableData), name: Notification.Name.reloadData, object: nil)
     }
 }

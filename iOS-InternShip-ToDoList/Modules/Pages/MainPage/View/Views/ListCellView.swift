@@ -25,11 +25,9 @@ final class ListCellView: UITableViewCell {
     public var completion: (() -> Void)?
     
     @objc private func checkoutButtonTapped() {
-        if let data = self.data {
-            CoreManager.shared.updateToDo(id: data.id, isDone: !data.isDone)
-            self.completion?()
-        }
+        self.completion?()
     }
+    
     private lazy var checkoutButton: UIImageView = {
         let imageView = UIImageView()
         imageView.isUserInteractionEnabled = true
@@ -59,7 +57,7 @@ final class ListCellView: UITableViewCell {
         
         // splitter
         if !isFirst {
-            splitter.frame = CGRect(x: Margins.M, y: 0, width: screenWidth - 2 * Margins.M, height: 2)
+            splitter.frame = CGRect(x: Margins.M, y: 0, width: screenWidth - 1 * Margins.M, height: 1)
             contentView.addSubview(splitter)
         } else {
             splitter.removeFromSuperview()
@@ -82,7 +80,15 @@ final class ListCellView: UITableViewCell {
 final class WholeCellView: UITableViewCell {
     public static let id = "WholeCellView"
     
+    private lazy var background = {
+        $0.backgroundColor = .background
+        $0.frame.origin = .zero
+        $0.frame.size = CGSize(width: contentView.frame.width, height: 100)
+        return $0
+    }(UIView())
+    
     func configure(size: CGSize) {
         contentView.frame.size = size
+        contentView.addSubview(background)
     }
 }

@@ -13,6 +13,11 @@ final class FooterView: UIView {
         return $0
     }(UIVisualEffectView(frame: self.bounds))
     
+    private lazy var activityIndicator: UIActivityIndicatorView = {
+        $0.hidesWhenStopped = true
+        return $0
+    }(UIActivityIndicatorView(frame: CGRect(x: 18, y: self.bounds.minY + 12, width: 30, height: 30)))
+    
     public lazy var countLabel : UILabel = {
         $0.textColor = .primaryText
         $0.textAlignment = .center
@@ -37,7 +42,7 @@ final class FooterView: UIView {
     init(frame: CGRect, toDosCount: Int) {
         super.init(frame: frame)
         addSubview(footerView)
-        addSubviews(countLabel, addButton)
+        addSubviews(activityIndicator, countLabel, addButton)
     }
     
     required init?(coder: NSCoder) {
