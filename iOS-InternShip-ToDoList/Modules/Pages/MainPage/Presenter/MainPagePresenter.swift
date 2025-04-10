@@ -31,19 +31,17 @@ final class MainPagePresenter: MainPagePresenterProtocol {
     
     @objc func reloadTableData() {
         self.toDos = CoreManager.shared.readAllToDos()
-        self.toDos.append(ToDo()) // для пустой ячейки снизу
         DispatchQueue.main.async {
             self.view?.reloadListTableView()
-            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDos.count - 1) // минус пустая ячейка
+            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDos.count)
         }
     }
     
     public func deleteItem(id: String) {
         CoreManager.shared.deleteToDo(id: id)
         self.toDos = CoreManager.shared.readAllToDos()
-        self.toDos.append(ToDo()) // для пустой ячейки снизу
         DispatchQueue.main.async {
-            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDos.count - 1) // минус пустая ячейка
+            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDos.count)
         }
     }
     

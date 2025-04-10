@@ -75,20 +75,3 @@ final class ListCellView: UITableViewCell {
         contentView.addSubview(contentLayout)
     }
 }
-
-
-final class WholeCellView: UITableViewCell {
-    public static let id = "WholeCellView"
-    
-    private lazy var background = {
-        $0.backgroundColor = .background
-        $0.frame.origin = .zero
-        $0.frame.size = CGSize(width: contentView.frame.width, height: 100)
-        return $0
-    }(UIView())
-    
-    func configure(size: CGSize) {
-        contentView.frame.size = size
-        contentView.addSubview(background)
-    }
-}
