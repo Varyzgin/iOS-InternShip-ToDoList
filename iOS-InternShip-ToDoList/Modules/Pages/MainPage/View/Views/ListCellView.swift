@@ -15,12 +15,6 @@ final class ListCellView: UITableViewCell {
     private var screenWidth: CGFloat = 0
     private var contentWidth: CGFloat = 0
     private let checkoutButtonSize: CGSize = CGSize(width: 32, height: 32)
-
-    private lazy var splitter: UIView = {
-        let view = UIView()
-        view.backgroundColor = .systemGray6
-        return view
-    }()
     
     public var completion: (() -> Void)?
     
@@ -46,23 +40,15 @@ final class ListCellView: UITableViewCell {
 
         checkoutButton.image = nil
         checkoutButton.tintColor = nil
-       
+        
         contentLayout.resetContent()
     }
 
-    public func configure(with data: ToDo, isFirst: Bool = false, screenWidth: CGFloat) {
+    public func configure(with data: ToDo, screenWidth: CGFloat) {
         self.data = data
         self.screenWidth = screenWidth
         self.contentWidth = screenWidth - 2 * Margins.M - Margins.XS - checkoutButtonSize.width
         
-        // splitter
-        if !isFirst {
-            splitter.frame = CGRect(x: Margins.M, y: 0, width: screenWidth - 1 * Margins.M, height: 1)
-            contentView.addSubview(splitter)
-        } else {
-            splitter.removeFromSuperview()
-        }
-
         // button
         checkoutButton.image = UIImage(systemName: data.isDone ? "checkmark.circle" : "circle")
         checkoutButton.tintColor = data.isDone ? .accent : .inactive
@@ -73,22 +59,5 @@ final class ListCellView: UITableViewCell {
         contentLayout.frame = CGRect(x: checkoutButton.frame.maxX + Margins.XS, y: Margins.S, width: contentWidth, height: frame.height - 2 * Margins.S)
         contentLayout.configure(with: data)
         contentView.addSubview(contentLayout)
-    }
-}
-
-
-final class WholeCellView: UITableViewCell {
-    public static let id = "WholeCellView"
-    
-    private lazy var background = {
-        $0.backgroundColor = .background
-        $0.frame.origin = .zero
-        $0.frame.size = CGSize(width: contentView.frame.width, height: 100)
-        return $0
-    }(UIView())
-    
-    func configure(size: CGSize) {
-        contentView.frame.size = size
-        contentView.addSubview(background)
     }
 }

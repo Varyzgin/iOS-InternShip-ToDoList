@@ -71,6 +71,7 @@ final class ContentLayout: UIView {
         titleLabel.text = nil
         descriptionLabel.text = nil
         dateLabel.text = nil
+        descriptionLabel.removeFromSuperview()
     }
     
     public static func calculateFrame(for data: ToDo, screenWidth: CGFloat) -> CGSize {
