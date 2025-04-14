@@ -10,8 +10,8 @@ import Foundation
 extension Date {
     func formattedDDMMYY() -> String {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .short
-        dateFormatter.timeStyle = .none
+        dateFormatter.dateStyle = .medium
+        dateFormatter.timeStyle = .short
         dateFormatter.locale = Locale(identifier: "ru_RU")
         return dateFormatter.string(from: self)
     }

@@ -8,7 +8,6 @@
 import UIKit
 
 final class ContentLayout: UIView {
-//    private lazy var data: ToDo? = nil
     private lazy var striker: UIView = {
         let view = UIView()
         view.backgroundColor = .secondaryText

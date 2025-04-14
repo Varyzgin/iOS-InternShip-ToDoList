@@ -29,10 +29,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             DispatchQueue.main.async {
                 networkService.sendRequest(path: "/todos", completion: { response in
                     response.recordToCoreData()
-                    NotificationCenter.default.post(name: Notification.Name.reloadData, object: nil)
+                    NotificationCenter.default.post(name: Notification.Name.loadData, object: nil)
                 })
             }
         }
+        
         // Use this method to select a configuration to create the new scene with.
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }

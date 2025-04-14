@@ -14,17 +14,13 @@ final class CoreManager {
     private init() {}
 
     //crud
-    func createToDo(title: String, descript: String?, date: Date?, isDone: Bool = false) {
+    func createToDo(title: String, descript: String?, date: Date = Date.now, isDone: Bool = false) {
         let toDo = ToDo(context: persistentContainer.viewContext)
         toDo.title = title
         if let descript = descript {
             toDo.descript = descript
         }
-        if let date = date {
-            toDo.date = date
-        } else {
-            toDo.date = Date.now
-        }
+        toDo.date = date
         toDo.isDone = isDone
         toDo.id = UUID().uuidString
         
@@ -34,7 +30,7 @@ final class CoreManager {
     func readAllToDos() -> [ToDo] {
         let request = ToDo.fetchRequest()
         request.sortDescriptors = [
-            NSSortDescriptor(key: "isDone", ascending: true),
+//            NSSortDescriptor(key: "isDone", ascending: true),
             NSSortDescriptor(key: "date", ascending: false)
         ]
         do {
@@ -58,7 +54,7 @@ final class CoreManager {
         }
     }
     
-    func updateToDo(id: String, title: String? = nil, descript: String? = nil, isDone: Bool = false) {
+    func updateToDo(id: String, title: String? = nil, descript: String? = nil, date: Date = Date.now, isDone: Bool = false) {
         let request = ToDo.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", id)
         do {
@@ -69,7 +65,7 @@ final class CoreManager {
             if let descript = descript {
                 toDo?.descript = descript
             }
-            toDo?.date = Date.now
+            toDo?.date = date
             toDo?.isDone = isDone
             
             saveContext()

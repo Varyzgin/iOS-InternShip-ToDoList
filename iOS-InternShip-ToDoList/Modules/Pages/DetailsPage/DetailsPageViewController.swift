@@ -83,9 +83,11 @@ final class DetailsPageViewController: UIViewController, UITextViewDelegate {
         
         if let title = titleTextView.text, !title.isEmpty {
             if let toDo = toDo { // если toDo == nil - то это значит, что заметки не было
-                CoreManager.shared.updateToDo(id: toDo.id, title: title, descript: descriptionTextView.text, isDone: toDo.isDone)
+                if self.toDo?.title != title || self.toDo?.descript != descriptionTextView.text {
+                    CoreManager.shared.updateToDo(id: toDo.id, title: title, descript: descriptionTextView.text)
+                }
             } else {
-                CoreManager.shared.createToDo(title: title, descript: descriptionTextView.text, date: Date.now, isDone: false)
+                CoreManager.shared.createToDo(title: title, descript: descriptionTextView.text)
             }
         }
     }

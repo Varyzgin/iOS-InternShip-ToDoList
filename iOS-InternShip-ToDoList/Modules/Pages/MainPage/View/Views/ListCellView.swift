@@ -57,7 +57,7 @@ final class ListCellView: UITableViewCell {
         
         // splitter
         if !isFirst {
-            splitter.frame = CGRect(x: Margins.M, y: 0, width: screenWidth - 1 * Margins.M, height: 1)
+            splitter.frame = CGRect(x: Margins.M, y: 0, width: screenWidth - 2 * Margins.M, height: 1)
             contentView.addSubview(splitter)
         } else {
             splitter.removeFromSuperview()

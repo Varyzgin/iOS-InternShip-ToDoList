@@ -8,15 +8,19 @@
 import Foundation
 
 protocol MainPagePresenterProtocol: AnyObject {
-    var toDos: [ToDo] { get set }
-    func deleteItem(id: String)
-    func checkoutTapped(id: String, isDone: Bool)
+    func reloadTableShowRaw()
+    func reloadTableShow()
+    func deleteItem(indexPath: IndexPath)
+    func filterToDos(searchTerm: String?)
+    func checkoutTapped(indexPath: IndexPath)
+    var toDosToShow: [ToDo] { get }
 }
 
 final class MainPagePresenter: MainPagePresenterProtocol {
     private weak var view: MainPageViewControllerProtocol?
     
-    internal var toDos: [ToDo] = []
+    private var toDos: [ToDo] = []
+    internal var toDosToShow: [ToDo] = []
     
     private func taskRus(number toDosCount: Int ) -> String {
         if toDosCount % 10 == 1 && toDosCount % 100 != 11 {
@@ -29,29 +33,80 @@ final class MainPagePresenter: MainPagePresenterProtocol {
         }
     }
     
-    @objc func reloadTableData() {
+    @objc func loadTableData() {
         self.toDos = CoreManager.shared.readAllToDos()
+        self.toDosToShow = self.toDos
         DispatchQueue.main.async {
-            self.view?.reloadListTableView()
-            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDos.count)
+            self.view?.reloadTable()
+            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDosToShow.count)
         }
     }
     
-    public func deleteItem(id: String) {
+    func reloadTableShowRaw() {
+        self.toDosToShow = self.toDos
+        DispatchQueue.main.async {
+            self.view?.reloadTable()
+            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDosToShow.count)
+        }
+    }
+    
+    func reloadTableShow() {
+        DispatchQueue.main.async {
+            self.view?.reloadTable()
+            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDosToShow.count)
+        }
+    }
+    
+    internal func filterToDos(searchTerm: String?) {
+        if let search = searchTerm {
+            if search.count > 0 {
+                self.toDosToShow = self.toDos
+                let search = search.lowercased()
+                let filteredResults = self.toDos.filter {
+                    $0.title.lowercased().contains(search) ||
+                    $0.descript?.lowercased().contains(search) ?? false
+                }
+                self.toDosToShow = filteredResults
+                reloadTableShow()
+            } else {
+                reloadTableShowRaw()
+            }
+        }
+    }
+    
+    public func deleteItem(indexPath: IndexPath) {
+        // change core
+        let id = self.toDosToShow[indexPath.row].id
         CoreManager.shared.deleteToDo(id: id)
+        
+        // change raw
         self.toDos = CoreManager.shared.readAllToDos()
-        DispatchQueue.main.async {
-            self.view?.footerView.countLabel.text = self.taskRus(number: self.toDos.count)
-        }
+
+        // change show
+        self.toDosToShow.remove(at: indexPath.row)
+        
+        // perform
+        self.view?.deletePerform(indexPath: indexPath)
     }
     
-    public func checkoutTapped(id: String, isDone: Bool) {
-        CoreManager.shared.updateToDo(id: id, isDone: !isDone)
-        self.reloadTableData()
+    public func checkoutTapped(indexPath: IndexPath) {
+        // change core
+        let id = self.toDosToShow[indexPath.row].id
+        let isDone = self.toDosToShow[indexPath.row].isDone
+        CoreManager.shared.updateToDo(id: id, date: self.toDosToShow[indexPath.row].date ?? Date.now, isDone: !isDone)
+        
+        // change show
+//        let ToDo = self.toDosToShow[indexPath.row]
+//        ToDo.isDone = !isDone
+//        self.toDosToShow[indexPath.row] = ToDo
+
+        // perform
+        reloadTableShow()
     }
 
     public init(view: MainPageViewControllerProtocol?) {
         self.view = view
-        NotificationCenter.default.addObserver(self, selector: #selector(reloadTableData), name: Notification.Name.reloadData, object: nil)
+        loadTableData()
+        NotificationCenter.default.addObserver(self, selector: #selector(loadTableData), name: Notification.Name.loadData, object: nil)
     }
 }
